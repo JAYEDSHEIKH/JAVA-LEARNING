@@ -34,8 +34,13 @@
 20. [Multithreading & Concurrency](#20-multithreading--concurrency)
 21. [Modern Java (Java 8 to 21)](#21-modern-java-java-8-to-21)
 22. [Minecraft Plugin Basics (Bukkit/Spigot)](#22-minecraft-plugin-basics-bukkitspigot)
-23. [Best Practices & Common Mistakes](#23-best-practices--common-mistakes)
-24. [Quick Reference Cheat Sheet](#24-quick-reference-cheat-sheet)
+23. [Best Practices & Common Mistakes](#26-best-practices--common-mistakes)
+24. [Quick Reference Cheat Sheet](#27-quick-reference-cheat-sheet)
+
+### 🎮 Bonus Projects
+25. [Making a Terminal-Based Game](#23-making-a-terminal-based-game)
+26. [Making UI with Java (Swing)](#24-making-ui-with-java-swing)
+27. [Making Animations with Java](#25-making-animations-with-java)
 
 ---
 
@@ -1990,7 +1995,525 @@ Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
 
 ---
 
-## 23. Best Practices & Common Mistakes
+## 23. Making a Terminal-Based Game
+
+Terminal games use the console for input/output — no graphics library needed. A classic starting project is a **text adventure** or **number guessing game**.
+
+### Example: Number Guessing Game
+
+```java
+import java.util.Scanner;
+import java.util.Random;
+
+public class GuessingGame {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+
+        int secretNumber = random.nextInt(100) + 1;  // 1 to 100
+        int attempts = 0;
+        boolean won = false;
+
+        System.out.println("=== Number Guessing Game ===");
+        System.out.println("Guess a number between 1 and 100!\n");
+
+        while (!won) {
+            System.out.print("Your guess: ");
+            int guess = scanner.nextInt();
+            attempts++;
+
+            if (guess < secretNumber) {
+                System.out.println("Too low! Try again.");
+            } else if (guess > secretNumber) {
+                System.out.println("Too high! Try again.");
+            } else {
+                won = true;
+                System.out.println("\n🎉 Correct! You got it in " + attempts + " attempts!");
+            }
+        }
+
+        scanner.close();
+    }
+}
+```
+
+### Example: Simple Text Adventure
+
+```java
+import java.util.Scanner;
+
+public class TextAdventure {
+
+    static Scanner scanner = new Scanner(System.in);
+    static int health = 100;
+    static int gold = 0;
+
+    public static void main(String[] args) {
+        System.out.println("=== THE DUNGEON ===");
+        System.out.println("You wake up in a dark dungeon...\n");
+        roomOne();
+    }
+
+    static void roomOne() {
+        System.out.println("You see two doors: [1] Left  [2] Right");
+        System.out.print("Choose: ");
+        int choice = scanner.nextInt();
+
+        if (choice == 1) {
+            System.out.println("You find a chest with 50 gold!");
+            gold += 50;
+            roomTwo();
+        } else {
+            System.out.println("A monster attacks! You lose 30 HP.");
+            health -= 30;
+            System.out.println("HP: " + health + " | Gold: " + gold);
+            roomTwo();
+        }
+    }
+
+    static void roomTwo() {
+        if (health <= 0) {
+            System.out.println("\n💀 Game Over! You died.");
+            return;
+        }
+        System.out.println("\nYou reach the exit!");
+        System.out.println("Final stats — HP: " + health + " | Gold: " + gold);
+        System.out.println("🏆 You escaped the dungeon!");
+    }
+}
+```
+
+### Key techniques for terminal games
+
+```java
+// Clear screen (works on most terminals)
+System.out.print("\033[H\033[2J");
+System.out.flush();
+
+// Colored text (ANSI codes)
+System.out.println("\033[31mRed text\033[0m");   // red
+System.out.println("\033[32mGreen text\033[0m"); // green
+System.out.println("\033[33mYellow text\033[0m");// yellow
+System.out.println("\033[0mReset color\033[0m"); // reset
+
+// Add a delay (pause between turns)
+try {
+    Thread.sleep(1000);  // pause 1 second
+} catch (InterruptedException e) {
+    Thread.currentThread().interrupt();
+}
+
+// Read a single character choice
+Scanner sc = new Scanner(System.in);
+String input = sc.nextLine().trim().toLowerCase();
+```
+
+### Game loop pattern
+```java
+boolean running = true;
+
+while (running) {
+    displayStatus();       // show HP, score, inventory
+    String action = getInput();  // read player input
+
+    switch (action) {
+        case "n" -> moveNorth();
+        case "s" -> moveSouth();
+        case "attack" -> attackEnemy();
+        case "quit" -> running = false;
+        default -> System.out.println("Unknown command.");
+    }
+
+    checkWinLose();        // did the player win or die?
+}
+```
+
+---
+
+## 24. Making UI with Java (Swing)
+
+Java's built-in **Swing** library lets you build desktop GUIs — windows, buttons, text fields, menus, and more. No extra installation needed.
+
+### Your first window
+
+```java
+import javax.swing.*;
+
+public class FirstWindow {
+    public static void main(String[] args) {
+        // Always create UI on the Event Dispatch Thread
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("My First Window");
+            frame.setSize(400, 300);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLocationRelativeTo(null);  // center on screen
+            frame.setVisible(true);
+        });
+    }
+}
+```
+
+### Adding components
+
+```java
+import javax.swing.*;
+import java.awt.*;
+
+public class SimpleForm {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Simple Form");
+            frame.setSize(350, 200);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLayout(new FlowLayout());  // simple layout
+
+            JLabel label   = new JLabel("Enter your name:");
+            JTextField field  = new JTextField(15);
+            JButton button = new JButton("Greet");
+            JLabel result  = new JLabel("");
+
+            // Button click action
+            button.addActionListener(e -> {
+                String name = field.getText();
+                result.setText("Hello, " + name + "!");
+            });
+
+            frame.add(label);
+            frame.add(field);
+            frame.add(button);
+            frame.add(result);
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
+    }
+}
+```
+
+### Common Swing components
+
+```java
+JLabel label        = new JLabel("Text label");
+JButton button      = new JButton("Click me");
+JTextField field    = new JTextField(20);          // single-line input
+JTextArea area      = new JTextArea(5, 20);        // multi-line input
+JCheckBox check     = new JCheckBox("Accept terms");
+JRadioButton radio  = new JRadioButton("Option A");
+JComboBox<String> combo = new JComboBox<>(new String[]{"A", "B", "C"});
+JSlider slider      = new JSlider(0, 100, 50);     // min, max, initial
+JPasswordField pass = new JPasswordField(15);
+JSpinner spinner    = new JSpinner();
+
+// Scrollable text area
+JScrollPane scroll = new JScrollPane(area);
+
+// Message dialogs
+JOptionPane.showMessageDialog(frame, "Done!");
+int choice = JOptionPane.showConfirmDialog(frame, "Are you sure?");
+String input = JOptionPane.showInputDialog("Enter value:");
+```
+
+### Layouts
+
+```java
+// FlowLayout — components flow left to right
+frame.setLayout(new FlowLayout());
+
+// BorderLayout — North/South/East/West/Center
+frame.setLayout(new BorderLayout());
+frame.add(new JButton("Top"),    BorderLayout.NORTH);
+frame.add(new JButton("Bottom"), BorderLayout.SOUTH);
+frame.add(new JButton("Center"), BorderLayout.CENTER);
+
+// GridLayout — rows x columns grid
+frame.setLayout(new GridLayout(3, 2));  // 3 rows, 2 columns
+
+// GridBagLayout — flexible, complex layouts
+// BoxLayout — horizontal or vertical stacking
+JPanel panel = new JPanel();
+panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));  // vertical
+```
+
+### Custom drawing with JPanel
+
+```java
+import javax.swing.*;
+import java.awt.*;
+
+public class DrawingExample extends JPanel {
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+
+        // Anti-aliasing for smooth lines
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Draw shapes
+        g2.setColor(Color.BLUE);
+        g2.fillRect(50, 50, 100, 60);      // filled rectangle
+
+        g2.setColor(Color.RED);
+        g2.drawOval(200, 50, 80, 80);      // circle outline
+
+        g2.setColor(Color.GREEN);
+        g2.fillOval(320, 50, 80, 80);      // filled circle
+
+        // Draw text
+        g2.setColor(Color.BLACK);
+        g2.setFont(new Font("Arial", Font.BOLD, 20));
+        g2.drawString("Hello, Graphics!", 50, 180);
+
+        // Draw a line
+        g2.setColor(Color.ORANGE);
+        g2.setStroke(new BasicStroke(3));
+        g2.drawLine(50, 220, 400, 220);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Drawing");
+            frame.add(new DrawingExample());
+            frame.setSize(500, 300);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
+    }
+}
+```
+
+### Key events and mouse events
+
+```java
+// Key listener
+frame.addKeyListener(new KeyAdapter() {
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            System.out.println("Space pressed!");
+        }
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            System.out.println("Left arrow!");
+        }
+    }
+});
+frame.setFocusable(true);
+
+// Mouse listener on a panel
+panel.addMouseListener(new MouseAdapter() {
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        System.out.println("Clicked at: " + e.getX() + ", " + e.getY());
+    }
+});
+```
+
+---
+
+## 25. Making Animations with Java
+
+Animations in Java are created by repeatedly updating state and repainting the screen — typically 30 to 60 times per second using a **Swing Timer** or a **game loop thread**.
+
+### Basic animation with Swing Timer
+
+```java
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class BouncingBall extends JPanel implements ActionListener {
+
+    int x = 100, y = 100;       // ball position
+    int dx = 3, dy = 2;         // speed (pixels per frame)
+    final int RADIUS = 25;
+    Timer timer;
+
+    public BouncingBall() {
+        setBackground(Color.BLACK);
+        timer = new Timer(16, this);  // ~60 FPS (16ms per frame)
+        timer.start();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        // Move the ball
+        x += dx;
+        y += dy;
+
+        // Bounce off walls
+        if (x - RADIUS < 0 || x + RADIUS > getWidth())  dx = -dx;
+        if (y - RADIUS < 0 || y + RADIUS > getHeight()) dy = -dy;
+
+        repaint();  // trigger paintComponent
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);  // clear screen
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(Color.CYAN);
+        g2.fillOval(x - RADIUS, y - RADIUS, RADIUS * 2, RADIUS * 2);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Bouncing Ball");
+            frame.add(new BouncingBall());
+            frame.setSize(600, 400);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
+    }
+}
+```
+
+### Moving a sprite with keyboard controls
+
+```java
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class MovingPlayer extends JPanel {
+
+    int playerX = 200, playerY = 200;
+    final int SPEED = 5;
+    final int SIZE = 30;
+
+    public MovingPlayer() {
+        setBackground(Color.DARK_GRAY);
+        setFocusable(true);
+
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_UP    -> playerY -= SPEED;
+                    case KeyEvent.VK_DOWN  -> playerY += SPEED;
+                    case KeyEvent.VK_LEFT  -> playerX -= SPEED;
+                    case KeyEvent.VK_RIGHT -> playerX += SPEED;
+                }
+                // Clamp to screen
+                playerX = Math.max(0, Math.min(getWidth() - SIZE, playerX));
+                playerY = Math.max(0, Math.min(getHeight() - SIZE, playerY));
+                repaint();
+            }
+        });
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.setColor(Color.YELLOW);
+        g.fillRect(playerX, playerY, SIZE, SIZE);
+
+        g.setColor(Color.WHITE);
+        g.drawString("Use arrow keys to move!", 10, 20);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Move the Square");
+            frame.add(new MovingPlayer());
+            frame.setSize(600, 400);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
+    }
+}
+```
+
+### Smooth game loop using a thread
+
+```java
+public class GameLoop extends JPanel implements Runnable {
+
+    private Thread gameThread;
+    private boolean running = true;
+    private double angle = 0;  // rotating shape angle
+
+    public GameLoop() {
+        setBackground(Color.BLACK);
+        gameThread = new Thread(this);
+        gameThread.start();
+    }
+
+    @Override
+    public void run() {
+        // Fixed timestep: target 60 FPS
+        long targetTime = 1000 / 60;
+
+        while (running) {
+            long start = System.currentTimeMillis();
+
+            update();   // game logic
+            repaint();  // draw
+
+            long elapsed = System.currentTimeMillis() - start;
+            long sleepTime = targetTime - elapsed;
+            if (sleepTime > 0) {
+                try { Thread.sleep(sleepTime); }
+                catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            }
+        }
+    }
+
+    void update() {
+        angle += 2;  // rotate 2 degrees per frame
+        if (angle >= 360) angle = 0;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+
+        int cx = getWidth() / 2;
+        int cy = getHeight() / 2;
+
+        g2.setColor(Color.GREEN);
+        g2.translate(cx, cy);
+        g2.rotate(Math.toRadians(angle));
+        g2.fillRect(-40, -40, 80, 80);  // spinning square
+        g2.rotate(-Math.toRadians(angle));
+        g2.translate(-cx, -cy);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Game Loop");
+            frame.add(new GameLoop());
+            frame.setSize(500, 400);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
+    }
+}
+```
+
+### Animation tips
+
+| Goal | Technique |
+|------|-----------|
+| Simple timed animation | `javax.swing.Timer` (16ms = ~60 FPS) |
+| Game loop with fixed timestep | Dedicated `Thread` with `Thread.sleep()` |
+| Smooth movement | Update position by small increments each frame |
+| Flicker-free rendering | Always call `super.paintComponent(g)` first |
+| Rotating/scaling shapes | Use `Graphics2D.rotate()` and `Graphics2D.scale()` |
+| Load an image | `ImageIcon icon = new ImageIcon("player.png")` |
+| Draw an image | `g.drawImage(icon.getImage(), x, y, null)` |
+
+---
+
+## 26. Best Practices & Common Mistakes
 
 ### ✅ Good habits
 
@@ -2097,7 +2620,7 @@ public void increment() { count++; }  // NOT thread-safe
 
 ---
 
-## 24. Quick Reference Cheat Sheet
+## 27. Quick Reference Cheat Sheet
 
 ### Primitive types
 
@@ -2176,4 +2699,4 @@ import java.util.concurrent.*; // Threads, ExecutorService
 
 ---
 
-*Java rewards patience. Start with section 1, build small projects, and section 22 (Minecraft plugins) will be totally within reach before you know it.*
+*Java rewards patience. Start with section 1, build small projects, and sections 22–25 (Minecraft plugins, terminal games, UI, and animations) will be totally within reach before you know it.*
